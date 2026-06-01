@@ -83,6 +83,17 @@ function renderSection() {
     } else {
         editor.setValue("# No examples available");
     }
+
+    // Hide/show right panel toggle based on section
+    const toggleBtn = document.getElementById('panelToggle');
+    if (section.showEditor === false) {
+        toggleBtn.style.display = 'none';
+        // Auto-close panel if open
+        const panel = document.getElementById('rightPanel');
+        if (panel.classList.contains('open')) toggleRightPanel();
+    } else {
+        toggleBtn.style.display = 'block';
+    }
 }
 
 function renderTabs(section, activeIndex) {
@@ -364,3 +375,4 @@ document.addEventListener("keydown", function(e) {
         previousSection();
     }
 });
+
