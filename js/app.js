@@ -107,14 +107,7 @@ function renderTabs(section, activeIndex) {
         btn.classList.add("active-tab");
     }
 
-    const scratchButton = document.createElement("button");
-    scratchButton.innerText = "\u270F Scratch Pad";
-    scratchButton.className = "example-btn";
-    scratchButton.onclick = function() {
-        setActiveTab(scratchButton);
-        editor.setValue(localStorage.getItem(section.id) || "# Scratch Pad - write your PowerShell here");
-    };
-    tabs.appendChild(scratchButton);
+
 
     section.examples.forEach(function(example, index) {
         const button = document.createElement("button");
@@ -375,4 +368,5 @@ document.addEventListener("keydown", function(e) {
         previousSection();
     }
 });
+
 
