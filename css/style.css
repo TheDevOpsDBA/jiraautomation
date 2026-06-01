@@ -471,3 +471,8 @@ select{
         flex-wrap:wrap;
     }
 }
+
+/* CodeMirror comment color override */
+.CodeMirror .cm-comment{
+    color: #6a9955 !important;
+}
