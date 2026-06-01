@@ -40,35 +40,104 @@ header{
     background:#152232;
 }
 
-.layout{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
+/* === Main Container & Collapsible Panel Layout === */
+
+.main-container{
+    display:flex;
     padding:12px;
+    gap:0;
+    position:relative;
+    min-height:calc(100vh - 120px);
 }
 
-.left-panel,.right-panel{
+.left-panel{
+    flex:1;
     background:#1b2838;
     border-radius:12px;
-    padding:15px;
-    border:1px solid #2a3f55;
+    padding:20px;
+    border:1px solid #2a3a4a;
+    transition:margin-right 0.3s ease;
+    overflow-y:auto;
 }
+
+.left-panel.shifted{
+    margin-right:46%;
+}
+
+.right-panel{
+    position:fixed;
+    top:0;
+    right:0;
+    width:45%;
+    height:100vh;
+    background:#1b2838;
+    border-left:2px solid #00b4d8;
+    padding:15px;
+    transform:translateX(100%);
+    transition:transform 0.3s ease;
+    z-index:100;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+}
+
+.right-panel.open{
+    transform:translateX(0);
+}
+
+.right-panel-inner{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+}
+
+.panel-toggle{
+    position:fixed;
+    right:0;
+    top:50%;
+    transform:translateY(-50%);
+    z-index:101;
+    background:linear-gradient(180deg, #00b4d8, #457b9d);
+    color:white;
+    border:none;
+    padding:15px 8px;
+    border-radius:8px 0 0 8px;
+    cursor:pointer;
+    font-size:12px;
+    writing-mode:vertical-rl;
+    text-orientation:mixed;
+    letter-spacing:1px;
+    box-shadow:-2px 0 10px rgba(0,0,0,0.3);
+    transition:right 0.3s ease;
+}
+
+.panel-toggle:hover{
+    background:linear-gradient(180deg, #00d4f8, #557b9d);
+}
+
+.panel-toggle.shifted{
+    right:45%;
+}
+
+/* === Diagram === */
 
 .diagram-box{
     margin-bottom:15px;
-    animation: diagramSlideIn 0.5s ease-out both;
+    animation:diagramSlideIn 0.5s ease-out both;
 }
 
 @keyframes diagramSlideIn{
     from{
         opacity:0;
-        transform: translateY(-12px) scale(0.95);
+        transform:translateY(-12px) scale(0.95);
     }
     to{
         opacity:1;
-        transform: translateY(0) scale(1);
+        transform:translateY(0) scale(1);
     }
 }
+
+/* === Left Panel Content === */
 
 .expand-btn{
     background:linear-gradient(45deg,#e63946,#457b9d);
@@ -81,16 +150,16 @@ header{
 }
 
 #description li{
-    opacity: 0;
-    transform: translateX(-20px);
-    transition: opacity 0.4s ease, transform 0.4s ease;
+    opacity:0;
+    transform:translateX(-20px);
+    transition:opacity 0.4s ease, transform 0.4s ease;
     margin:6px 0;
     color:#ccc;
 }
 
 #description li.revealed{
-    opacity: 1;
-    transform: translateX(0);
+    opacity:1;
+    transform:translateX(0);
 }
 
 .reveal-controls{
@@ -171,6 +240,8 @@ header{
     white-space:pre-wrap;
 }
 
+/* === Buttons & Inputs === */
+
 button{
     border:none;
     padding:10px 14px;
@@ -192,10 +263,29 @@ select{
     border-radius:8px;
 }
 
+/* === CodeMirror === */
+
 .CodeMirror{
-    height:420px;
+    height:300px;
     font-size:15px;
+    border-radius:8px;
 }
+
+.CodeMirror-selected{
+    background:#457b9d !important;
+}
+
+.CodeMirror-focused .CodeMirror-selected{
+    background:#457b9d !important;
+}
+
+.CodeMirror-line::selection,
+.CodeMirror-line > span::selection,
+.CodeMirror-line > span > span::selection{
+    background:#457b9d !important;
+}
+
+/* === Example Tabs === */
 
 #exampleTabs{
     display:flex;
@@ -210,22 +300,25 @@ select{
 
 .example-btn.active-tab{
     background:#e63946;
-    outline: 2px solid #00b4d8;
+    outline:2px solid #00b4d8;
 }
+
+/* === Action Row & Copy Status === */
 
 .action-row{
     margin-top:10px;
     margin-bottom:10px;
+    display:flex;
+    align-items:center;
 }
 
-#output{
-    background:black;
+.copy-status{
     color:#00b4d8;
-    padding:12px;
-    height:180px;
-    overflow:auto;
-    border-radius:8px;
+    font-size:12px;
+    margin-left:10px;
 }
+
+/* === Fullscreen === */
 
 .fullscreen{
     position:fixed !important;
@@ -237,11 +330,7 @@ select{
     overflow:auto;
 }
 
-@media(max-width:900px){
-    .layout{
-        grid-template-columns:1fr;
-    }
-}
+/* === Chat Panel === */
 
 .chat-panel{
     margin-top:12px;
@@ -249,6 +338,10 @@ select{
     border-radius:10px;
     overflow:hidden;
     background:#0a1420;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
 }
 
 .chat-header{
@@ -348,20 +441,6 @@ select{
     border-radius:6px;
 }
 
-.CodeMirror-selected{
-    background:#457b9d !important;
-}
-
-.CodeMirror-focused .CodeMirror-selected{
-    background:#457b9d !important;
-}
-
-.CodeMirror-line::selection,
-.CodeMirror-line > span::selection,
-.CodeMirror-line > span > span::selection{
-    background:#457b9d !important;
-}
-
 .chat-disclaimer{
     background:#0d1b2a;
     border:1px solid #e63946;
@@ -371,4 +450,24 @@ select{
     font-size:11px;
     color:#ccc;
     line-height:1.5;
+}
+
+/* === Mobile Responsive === */
+
+@media(max-width:768px){
+    .right-panel{
+        width:85%;
+    }
+    .panel-toggle.shifted{
+        right:85%;
+    }
+    .left-panel.shifted{
+        margin-right:0;
+    }
+}
+
+@media(max-width:900px){
+    .toolbar{
+        flex-wrap:wrap;
+    }
 }

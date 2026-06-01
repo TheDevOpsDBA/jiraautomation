@@ -21,8 +21,8 @@
 <button onclick="previousSection()">&#x2B05; Back</button>
 <button onclick="nextSection()">Next &#x27A1;</button>
 </div>
-<div class="layout">
-<div class="left-panel">
+<div class="main-container">
+<div class="left-panel" id="leftPanel">
     <h3 class="section-heading" id="sectionHeading"></h3>
     <div class="diagram-box">
         <svg viewBox="0 0 600 220" width="100%" height="220">
@@ -44,29 +44,35 @@
     <div id="description"></div>
     <div id="syntax"></div>
 </div>
-<div class="right-panel">
-    <div id="exampleTabs"></div>
-    <textarea id="editor"></textarea>
-    <div class="action-row">
-        <button onclick="copyCode()">&#x1F4CB; Copy to Clipboard</button>
-        <button onclick="clearOutput()">&#x1F9F9; Clear Output</button>
-    </div>
-    <pre id="output"></pre>
-    <div class="chat-panel">
-        <div class="chat-header" onclick="toggleChat()">
-            <span>&#x1F916; Ask AI about this code</span>
-            <button class="chat-toggle">&#x25BC;</button>
+
+<button class="panel-toggle" id="panelToggle" onclick="toggleRightPanel()">
+    &#x25C0; Code &amp; AI
+</button>
+
+<div class="right-panel collapsed" id="rightPanel">
+    <div class="right-panel-inner">
+        <div id="exampleTabs"></div>
+        <textarea id="editor"></textarea>
+        <div class="action-row">
+            <button onclick="copyToClipboard()">&#x1F4CB; Copy to Clipboard</button>
+            <span id="copyStatus" class="copy-status"></span>
         </div>
-        <div id="chatBody" class="chat-body">
-            <div class="chat-disclaimer">
-                &#x1F916; AI assistant for course-related questions only. This service may be discontinued at any time without notice. Please use it only for questions related to the course code examples. PowerShell Academy is not liable for AI responses. <a href="#" onclick="localStorage.removeItem('openrouter_api_key');OPENROUTER_API_KEY='';alert('API key cleared.');return false;" style="color:#00b4d8;">Reset key</a>
+        <div class="chat-panel">
+            <div class="chat-header" onclick="toggleChat()">
+                <span>&#x1F916; Ask AI about this code</span>
+                <button class="chat-toggle">&#x25BC;</button>
             </div>
-            <div id="chatMessages" class="chat-messages">
-                <div class="chat-msg bot">Hi! I can explain the PowerShell code in the editor. Ask me anything about Jira automation.</div>
-            </div>
-            <div class="chat-input-row">
-                <input type="text" id="chatInput" placeholder="e.g. How does OAuth token refresh work?" onkeydown="if(event.key==='Enter')sendChat()">
-                <button onclick="sendChat()">Send</button>
+            <div id="chatBody" class="chat-body">
+                <div class="chat-disclaimer">
+                    &#x1F916; AI assistant for course-related questions only. This service may be discontinued at any time without notice. Please use it only for questions related to the course code examples. PowerShell Academy is not liable for AI responses. <a href="#" onclick="localStorage.removeItem('openrouter_api_key');OPENROUTER_API_KEY='';alert('API key cleared.');return false;" style="color:#00b4d8;">Reset key</a>
+                </div>
+                <div id="chatMessages" class="chat-messages">
+                    <div class="chat-msg bot">Hi! I can explain the PowerShell code in the editor. Ask me anything about Jira automation.</div>
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chatInput" placeholder="e.g. How does OAuth token refresh work?" onkeydown="if(event.key==='Enter')sendChat()">
+                    <button onclick="sendChat()">Send</button>
+                </div>
             </div>
         </div>
     </div>

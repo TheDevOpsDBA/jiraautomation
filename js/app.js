@@ -138,20 +138,45 @@ function updateDiagram(section) {
     container.parentNode.replaceChild(newBox, container);
 }
 
-function copyCode() {
+// === Collapsible Right Panel ===
+
+function toggleRightPanel() {
+    const panel = document.getElementById('rightPanel');
+    const toggle = document.getElementById('panelToggle');
+    const left = document.getElementById('leftPanel');
+
+    panel.classList.toggle('open');
+    toggle.classList.toggle('shifted');
+    left.classList.toggle('shifted');
+
+    if (panel.classList.contains('open')) {
+        toggle.innerHTML = '\u25B6 Close';
+    } else {
+        toggle.innerHTML = '\u25C0 Code & AI';
+    }
+
+    // Refresh CodeMirror after transition
+    setTimeout(function() { if (editor) editor.refresh(); }, 350);
+}
+
+// === Copy to Clipboard ===
+
+function copyToClipboard() {
     const code = editor.getValue();
     navigator.clipboard.writeText(code).then(function() {
-        const output = document.getElementById("output");
-        output.textContent = "\u2713 Code copied to clipboard!";
+        document.getElementById('copyStatus').textContent = '\u2713 Copied!';
+        setTimeout(function() { document.getElementById('copyStatus').textContent = ''; }, 2000);
     }).catch(function() {
-        const output = document.getElementById("output");
-        output.textContent = "\u2717 Failed to copy. Try selecting and Ctrl+C.";
+        document.getElementById('copyStatus').textContent = '\u2717 Failed to copy';
+        setTimeout(function() { document.getElementById('copyStatus').textContent = ''; }, 2000);
     });
 }
 
-function clearOutput() {
-    document.getElementById("output").textContent = "";
-}
+// Legacy alias
+function copyCode() { copyToClipboard(); }
+function clearOutput() {}
+
+// === Reveal System ===
 
 let revealItems = [];
 let revealIndex = 0;
@@ -187,6 +212,8 @@ function updateRevealCounter() {
         }
     }
 }
+
+// === Navigation ===
 
 function previousSection() {
     if (currentSection > 0) {
