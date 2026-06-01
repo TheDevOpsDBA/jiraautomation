@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automating Jira with PowerShell</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css"/>
+</head>
+<body>
+<header>
+<a href="https://www.powershellacademy.com/s/store" target="_blank" class="logo-link">
+    <img src="images/Powershell Academy Logo 300-300.png" alt="PowerShell Academy" class="header-logo">
+</a>
+<h1>Automating Jira with PowerShell</h1>
+</header>
+<div class="toolbar">
+<select id="moduleSelect"></select>
+<select id="sectionSelect"></select>
+<button onclick="previousSection()">&#x2B05; Back</button>
+<button onclick="nextSection()">Next &#x27A1;</button>
+</div>
+<div class="layout">
+<div class="left-panel">
+    <h3 class="section-heading" id="sectionHeading"></h3>
+    <div class="diagram-box">
+        <svg viewBox="0 0 600 220" width="100%" height="220">
+            <rect x="40" y="50" width="140" height="70" rx="12" fill="#457b9d"/>
+            <text x="110" y="92" fill="white" font-size="20" text-anchor="middle">PowerShell</text>
+            <rect x="230" y="50" width="140" height="70" rx="12" fill="#e63946"/>
+            <text x="300" y="92" fill="white" font-size="20" text-anchor="middle">REST API</text>
+            <rect x="420" y="50" width="140" height="70" rx="12" fill="#00b4d8"/>
+            <text x="490" y="92" fill="#0d1b2a" font-size="20" text-anchor="middle">Jira Cloud</text>
+            <line x1="180" y1="85" x2="230" y2="85" stroke="white" stroke-width="5"/>
+            <line x1="370" y1="85" x2="420" y2="85" stroke="white" stroke-width="5"/>
+        </svg>
+    </div>
+    <button class="expand-btn" onclick="toggleDescription()">&#x26F6; Expand / Restore</button>
+    <div class="reveal-controls">
+        <button class="reveal-btn" onclick="revealAll()">&#x23E9; Show All</button>
+        <span id="revealCount" class="reveal-counter"></span>
+    </div>
+    <div id="description"></div>
+    <div id="syntax"></div>
+</div>
+<div class="right-panel">
+    <div id="exampleTabs"></div>
+    <textarea id="editor"></textarea>
+    <div class="action-row">
+        <button onclick="copyCode()">&#x1F4CB; Copy to Clipboard</button>
+        <button onclick="clearOutput()">&#x1F9F9; Clear Output</button>
+    </div>
+    <pre id="output"></pre>
+    <div class="chat-panel">
+        <div class="chat-header" onclick="toggleChat()">
+            <span>&#x1F916; Ask AI about this code</span>
+            <button class="chat-toggle">&#x25BC;</button>
+        </div>
+        <div id="chatBody" class="chat-body">
+            <div class="chat-disclaimer">
+                &#x1F916; AI assistant for course-related questions only. This service may be discontinued at any time without notice. Please use it only for questions related to the course code examples. PowerShell Academy is not liable for AI responses. <a href="#" onclick="localStorage.removeItem('openrouter_api_key');OPENROUTER_API_KEY='';alert('API key cleared.');return false;" style="color:#00b4d8;">Reset key</a>
+            </div>
+            <div id="chatMessages" class="chat-messages">
+                <div class="chat-msg bot">Hi! I can explain the PowerShell code in the editor. Ask me anything about Jira automation.</div>
+            </div>
+            <div class="chat-input-row">
+                <input type="text" id="chatInput" placeholder="e.g. How does OAuth token refresh work?" onkeydown="if(event.key==='Enter')sendChat()">
+                <button onclick="sendChat()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/shell/shell.min.js"></script>
+<script src="data/courses.js"></script>
+<script src="js/diagrams.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Presenter Portal - Jira Automation</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.admin-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 12px;
+}
+.presenter-panel {
+    background: #1b2838;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #2a3f55;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+.login-panel {
+    background: #1b2838;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #2a3f55;
+    max-width: 400px;
+    margin: 40px auto;
+}
+.login-panel input {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 12px;
+    background: #111827;
+    color: white;
+    border: 1px solid #333;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+#presenterContent { display: none; }
+#loginSection { display: block; }
+.nav-bar {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    background: #152232;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.section-title {
+    color: #00b4d8;
+    font-size: 18px;
+    margin: 0 0 15px 0;
+    border-bottom: 1px solid #2a3f55;
+    padding-bottom: 8px;
+}
+@media(max-width:900px){
+    .admin-layout { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+<a href="https://www.powershellacademy.com/s/store" target="_blank" class="logo-link">
+    <img src="images/Powershell Academy Logo 300-300.png" alt="PowerShell Academy" class="header-logo">
+</a>
+<h1>&#x1F393; Presenter Portal - Jira Automation</h1>
+</header>
+<div id="loginSection">
+<div class="login-panel">
+<h2 style="color:#00b4d8; margin-top:0;">Login</h2>
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()" style="width:100%;">Login</button>
+</div>
+</div>
+<div id="presenterContent">
+<div class="nav-bar">
+<select id="moduleSelect"></select>
+<select id="sectionSelect"></select>
+<button onclick="prevSection()">&#x2B05; Back</button>
+<button onclick="nextSection()">Next &#x27A1;</button>
+</div>
+<div class="admin-layout">
+<div class="presenter-panel">
+<h3 class="section-title" id="sectionTitle"></h3>
+<div id="diagramArea"></div>
+<div id="fullDescription"></div>
+<div id="syntaxArea" style="margin-top:20px; background:#111827; padding:12px; border-radius:8px; font-family:Consolas; color:#00b4d8; white-space:pre-wrap;"></div>
+</div>
+<div class="presenter-panel">
+<h3 class="section-title" style="color:#e63946;">Presenter Notes</h3>
+<div id="scriptDisplay" style="line-height:1.8; font-size:14px; color:#ddd; white-space:pre-wrap;"></div>
+<hr style="border-color:#2a3f55; margin:15px 0;">
+<h3 class="section-title" style="color:#457b9d;">My Notes</h3>
+<textarea id="notesArea" style="width:100%; height:200px; background:#111827; color:white; border:1px solid #333; border-radius:8px; padding:12px; font-family:Consolas; font-size:14px; resize:vertical;"></textarea>
+<div style="margin-top:12px; display:flex; gap:10px;">
+<button onclick="saveNotes()">&#x1F4BE; Save Notes</button>
+<span id="saveStatus" style="color:#00b4d8; font-size:13px; align-self:center;"></span>
+</div>
+</div>
+</div>
+</div>
+<script src="data/courses.js"></script>
+<script src="js/diagrams.js"></script>
+<script>
+let authenticated = false;
+let currentModule = 0;
+let currentSection = 0;
+
+function login() {
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    if (user === 'akkos' && pass === 'Alexa@12345') {
+        authenticated = true;
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('presenterContent').style.display = 'block';
+        loadModules();
+    } else {
+        alert('Invalid Credentials');
+    }
+}
+
+function loadModules() {
+    const mod = document.getElementById('moduleSelect');
+    mod.innerHTML = '';
+    courseData.modules.forEach((m, i) => {
+        mod.innerHTML += '<option value="' + i + '">' + m.title + '</option>';
+    });
+    mod.value = currentModule;
+    mod.onchange = function() {
+        currentModule = parseInt(this.value);
+        currentSection = 0;
+        loadSections();
+    };
+    loadSections();
+}
+
+function loadSections() {
+    const sec = document.getElementById('sectionSelect');
+    sec.innerHTML = '';
+    courseData.modules[currentModule].sections.forEach((s, i) => {
+        sec.innerHTML += '<option value="' + i + '">' + s.title + '</option>';
+    });
+    sec.value = currentSection;
+    sec.onchange = function() {
+        currentSection = parseInt(this.value);
+        renderPresenter();
+    };
+    renderPresenter();
+}
+
+function renderPresenter() {
+    const section = courseData.modules[currentModule].sections[currentSection];
+    document.getElementById('moduleSelect').value = currentModule;
+    document.getElementById('sectionSelect').value = currentSection;
+    document.getElementById('sectionTitle').textContent = section.title;
+    document.getElementById('fullDescription').innerHTML = section.description;
+    document.getElementById('syntaxArea').textContent = section.syntax;
+    document.getElementById('scriptDisplay').textContent = section.script || '';
+    document.getElementById('saveStatus').textContent = '';
+    // Load saved notes from localStorage
+    const noteKey = 'jira_notes_' + currentModule + '_' + currentSection;
+    document.getElementById('notesArea').value = localStorage.getItem(noteKey) || '';
+    // Render diagram
+    const diagramArea = document.getElementById('diagramArea');
+    if (typeof getDiagramSVG === 'function' && typeof sectionDiagramTypes !== 'undefined') {
+        const type = sectionDiagramTypes[section.id] || 'generic';
+        diagramArea.innerHTML = getDiagramSVG(type, section.title);
+    } else {
+        diagramArea.innerHTML = '';
+    }
+}
+
+function prevSection() {
+    if (currentSection > 0) {
+        currentSection--;
+    } else if (currentModule > 0) {
+        currentModule--;
+        currentSection = courseData.modules[currentModule].sections.length - 1;
+    }
+    loadSections();
+}
+
+function nextSection() {
+    const total = courseData.modules[currentModule].sections.length;
+    if (currentSection < total - 1) {
+        currentSection++;
+    } else if (currentModule < courseData.modules.length - 1) {
+        currentModule++;
+        currentSection = 0;
+    }
+    loadSections();
+}
+
+function saveNotes() {
+    const noteKey = 'jira_notes_' + currentModule + '_' + currentSection;
+    localStorage.setItem(noteKey, document.getElementById('notesArea').value);
+    document.getElementById('saveStatus').textContent = '\u2713 Saved to localStorage';
+}
+</script>
+</body>
+</html>
