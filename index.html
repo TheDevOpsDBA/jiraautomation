@@ -1,87 +1,333 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Automating Jira with PowerShell</title>
+<title>Jira Automation with PowerShell - Interactive Course</title>
+
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css"/>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"/>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css"/>
+
 </head>
 <body>
-<header>
-<a href="https://www.powershellacademy.com/s/store" target="_blank" class="logo-link">
-    <img src="images/Powershell Academy Logo 300-300.png" alt="PowerShell Academy" class="header-logo">
-</a>
-<h1>Automating Jira with PowerShell</h1>
-</header>
+
+<!-- Boot splash — shown until we know whether the user is signed in -->
+<div class="boot-splash" id="bootSplash">
+    <img src="images/Powershell Academy Logo 300-300.png" alt="" class="boot-logo">
+    <div class="boot-spinner"></div>
+    <div class="boot-text">Loading lab…</div>
+</div>
+
+<!-- Login / Sign-up Screen -->
+<div class="auth-overlay" id="authOverlay" style="display:none;">
+    <div class="auth-card">
+        <img src="images/Powershell Academy Logo 300-300.png" alt="PowerShell Academy" class="auth-logo">
+        <h2 class="auth-title">Jira Automation with PowerShell</h2>
+        <p class="auth-subtitle">Sign in to track progress, earn badges, and join the leaderboard.</p>
+
+        <button class="auth-google-btn" onclick="authSignInGoogle()">
+            <span class="google-icon">G</span> Continue with Google
+        </button>
+
+        <div class="auth-divider"><span>or</span></div>
+
+        <div class="auth-tabs">
+            <button class="auth-tab active" data-tab="login" onclick="authSwitchTab('login')">Sign In</button>
+            <button class="auth-tab" data-tab="signup" onclick="authSwitchTab('signup')">Sign Up</button>
+        </div>
+
+        <div class="auth-form" id="authForm">
+            <input type="text" id="authName" placeholder="Display name" style="display:none;">
+            <input type="email" id="authEmail" placeholder="Email">
+            <input type="password" id="authPassword" placeholder="Password (min 6 chars)">
+            <button class="auth-submit-btn" id="authSubmitBtn" onclick="authSubmit()">Sign In</button>
+            <div class="auth-error" id="authError"></div>
+        </div>
+
+        <div class="auth-guest">
+            <a href="#" onclick="authSignInGuest(); return false;">Continue as guest</a>
+            <span class="auth-guest-note">— progress saved on this device only</span>
+        </div>
+    </div>
+</div>
+
+<nav class="top-bar">
+    <a href="https://www.powershellacademy.com/s/store" target="_blank" class="logo-link">
+        <img src="images/Powershell Academy Logo 300-300.png" alt="PowerShell Academy" class="nav-logo">
+    </a>
+    <div class="breadcrumb" id="breadcrumb">Module 1 > Section 1</div>
+    <div class="gamification-bar">
+        <span class="user-name" id="userName" title="Your profile">👤 Student</span>
+        <span class="xp-level" id="xpLevel" title="Your Level">Lv.1</span>
+        <div class="xp-bar-container">
+            <div class="xp-bar" id="xpBar"></div>
+        </div>
+        <span class="xp-text" id="xpText">0 XP</span>
+        <span class="streak-display" id="streakDisplay" title="Daily Streak">🔥0</span>
+        <span class="save-status" id="saveStatus" title="Auto-save status"></span>
+        <button class="badge-btn" onclick="showBadges()" title="View Badges">🏅</button>
+        <button class="leaderboard-btn" onclick="openLeaderboard()" title="Leaderboard">🏆 Leaderboard</button>
+        <button class="reset-btn" onclick="resetMyProgress()" title="Clear cache and reset this course's progress">🧹 Reset</button>
+        <button class="signout-btn" onclick="authSignOut()" title="Sign out">⎋ Logout</button>
+    </div>
+</nav>
+
+<!-- Resume banner — shows when returning to the lab on a different section -->
+<div class="resume-banner" id="resumeBanner" style="display:none;">
+    <span class="resume-icon">↺</span>
+    <span class="resume-text" id="resumeText"></span>
+    <div class="resume-actions">
+        <button class="resume-yes" id="resumeYes">Continue</button>
+        <button class="resume-no"  id="resumeNo">Start fresh</button>
+    </div>
+</div>
+
 <div class="toolbar">
-<select id="moduleSelect"></select>
-<select id="sectionSelect"></select>
-<button onclick="previousSection()">&#x2B05; Back</button>
-<button onclick="nextSection()">Next &#x27A1;</button>
+    <select id="moduleSelect"></select>
+    <select id="sectionSelect"></select>
+    <button onclick="previousSection()">← Prev</button>
+    <button onclick="nextSection()">Next →</button>
+    <button class="challenge-mode-btn" onclick="openChallengeMode()" style="display:none;">🏆 Challenges</button>
+    <button class="fullscreen-btn" onclick="toggleStudentFullscreen()" title="Fullscreen (F11 alt)">⛶ Fullscreen</button>
+    <span class="section-indicator" id="sectionIndicator">1 / 3</span>
 </div>
+
 <div class="main-container">
-<div class="left-panel" id="leftPanel">
-    <h3 class="section-heading" id="sectionHeading"></h3>
-    <div class="diagram-box">
-        <svg viewBox="0 0 600 220" width="100%" height="220">
-            <rect x="40" y="50" width="140" height="70" rx="12" fill="#457b9d"/>
-            <text x="110" y="92" fill="white" font-size="20" text-anchor="middle">PowerShell</text>
-            <rect x="230" y="50" width="140" height="70" rx="12" fill="#e63946"/>
-            <text x="300" y="92" fill="white" font-size="20" text-anchor="middle">REST API</text>
-            <rect x="420" y="50" width="140" height="70" rx="12" fill="#00b4d8"/>
-            <text x="490" y="92" fill="#0d1b2a" font-size="20" text-anchor="middle">Jira Cloud</text>
-            <line x1="180" y1="85" x2="230" y2="85" stroke="white" stroke-width="5"/>
-            <line x1="370" y1="85" x2="420" y2="85" stroke="white" stroke-width="5"/>
-        </svg>
-    </div>
-    <button class="expand-btn" onclick="toggleDescription()">&#x26F6; Expand / Restore</button>
-    <div class="reveal-controls">
-        <button class="reveal-btn" onclick="revealAll()">&#x23E9; Show All</button>
-        <span id="revealCount" class="reveal-counter"></span>
-    </div>
-    <div id="description"></div>
-    <div id="syntax"></div>
-</div>
-
-<button class="panel-toggle" id="panelToggle" onclick="toggleRightPanel()">
-    &#x25C0; Code &amp; AI
-</button>
-
-<div class="right-panel collapsed" id="rightPanel">
-    <div class="right-panel-inner">
-        <div id="exampleTabs"></div>
-        <textarea id="editor"></textarea>
-        <div class="action-row">
-            <button onclick="copyToClipboard()">&#x1F4CB; Copy to Clipboard</button>
-            <span id="copyStatus" class="copy-status"></span>
-        </div>
-        <div class="chat-panel">
-            <div class="chat-header" onclick="toggleChat()">
-                <span>&#x1F916; Ask AI about this code</span>
-                <button class="chat-toggle">&#x25BC;</button>
+    <div class="left-panel" id="leftPanel">
+        <div class="lab-objective-card" id="labObjectiveCard" style="display:none;">
+            <div class="lab-obj-header">
+                <span class="lab-obj-icon">🎯</span>
+                <span class="lab-obj-title">LAB OBJECTIVE</span>
+                <button class="lab-obj-close" onclick="document.getElementById('labObjectiveCard').style.display='none'">✕</button>
             </div>
-            <div id="chatBody" class="chat-body">
-                <div class="chat-disclaimer">
-                    &#x1F916; AI assistant for course-related questions only. This service may be discontinued at any time without notice. Please use it only for questions related to the course code examples. PowerShell Academy is not liable for AI responses. <a href="#" onclick="localStorage.removeItem('openrouter_api_key');OPENROUTER_API_KEY='';alert('API key cleared.');return false;" style="color:#00b4d8;">Reset key</a>
+            <p class="lab-obj-text" id="labObjText"></p>
+            <div class="lab-obj-meta">
+                <span class="lab-obj-badge time" id="labObjTime">⏱ 10 min</span>
+                <span class="lab-obj-badge difficulty" id="labObjDifficulty">🧠 Beginner</span>
+            </div>
+            <div class="lab-obj-details">
+                <div class="lab-obj-skills">
+                    <span class="lab-obj-label">✅ Skills</span>
+                    <div class="lab-obj-tags" id="labObjSkills"></div>
                 </div>
-                <div id="chatMessages" class="chat-messages">
-                    <div class="chat-msg bot">Hi! I can explain the PowerShell code in the editor. Ask me anything about Jira automation.</div>
-                </div>
-                <div class="chat-input-row">
-                    <input type="text" id="chatInput" placeholder="e.g. How does OAuth token refresh work?" onkeydown="if(event.key==='Enter')sendChat()">
-                    <button onclick="sendChat()">Send</button>
+                <div class="lab-obj-tech">
+                    <span class="lab-obj-label">🛠 Technologies</span>
+                    <div class="lab-obj-tags" id="labObjTech"></div>
                 </div>
             </div>
         </div>
+        <h2 class="section-heading" id="sectionHeading"></h2>
+        <div class="diagram-card">
+            <div class="diagram-box"></div>
+        </div>
+        <div class="reveal-controls">
+            <button class="reveal-btn" onclick="revealAll()">⏩ Show All</button>
+            <span id="revealCount" class="reveal-counter"></span>
+        </div>
+        <div id="description"></div>
+        <div id="labSection" class="hands-on-lab" style="display:none;">
+            <div class="lab-title-bar">
+                <span class="lab-icon">🧪</span>
+                <span class="lab-title">HANDS-ON CHALLENGE</span>
+            </div>
+            <div class="lab-task" id="labTask"></div>
+            <div class="lab-buttons">
+                <button class="lab-check-btn" onclick="checkAnswer()">✓ Check My Code</button>
+                <button class="lab-hint-btn" onclick="showHint()">💡 Hint</button>
+                <button class="lab-solution-btn" onclick="showSolution()">👁 Solution</button>
+            </div>
+            <div class="lab-feedback" id="labFeedback" style="display:none;"></div>
+        </div>
+        <div class="syntax-accordion">
+            <details>
+                <summary>📋 Quick Reference</summary>
+                <pre id="syntax"></pre>
+            </details>
+        </div>
+    </div>
+
+    <button class="panel-toggle" id="panelToggle" onclick="toggleRightPanel()">◀ Code &amp; AI</button>
+
+    <div class="right-panel" id="rightPanel">
+        <!-- IDE Header -->
+        <div class="ide-header">
+            <div class="ide-tabs">
+                <div class="ide-tab active" id="fileBadge">📄 example.ps1</div>
+            </div>
+            <div class="ide-actions">
+                <button onclick="runCode()" class="ide-run-btn" title="Run (Ctrl+Enter)">▶ Run</button>
+                <button onclick="runSelected()" class="ide-action-btn" title="Run Selected">▶ Sel</button>
+                <button onclick="copyCode()" class="ide-action-btn" title="Copy Code">📋</button>
+                <button onclick="clearOutput()" class="ide-action-btn" title="Clear">🧹</button>
+            </div>
+        </div>
+
+        <!-- Example Selector -->
+        <div class="example-selector">
+            <div id="exampleTabs"></div>
+        </div>
+
+        <!-- Code Editor Area -->
+        <div class="editor-area">
+            <textarea id="editor"></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="editor-actions">
+            <button onclick="runCode()" class="ide-run-btn">▶ Run All</button>
+            <button onclick="runSelected()" class="ide-action-btn">▶ Selected</button>
+            <button onclick="copyCode()" class="ide-action-btn">📋 Copy</button>
+            <button onclick="clearOutput()" class="ide-action-btn">🧹 Clear</button>
+        </div>
+
+        <!-- Terminal Output -->
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <span class="terminal-title">⌂ TERMINAL</span>
+                <span class="terminal-badge">PowerShell 7</span>
+            </div>
+            <pre id="output" class="terminal-output"><span class="terminal-prompt">PS&gt; </span>Click 📋 Copy to copy the script, then paste it in your PowerShell terminal.</pre>
+        </div>
+
+        <!-- AI Lab Mentor -->
+        <div class="ai-mentor-section">
+            <div class="ai-mentor-header">
+                <div class="ai-mentor-avatar">🤖</div>
+                <div class="ai-mentor-info">
+                    <span class="ai-mentor-name">AI Lab Mentor</span>
+                    <span class="ai-mentor-status">● Online — watching your code</span>
+                </div>
+            </div>
+            <div class="ai-mentor-suggestions" id="mentorSuggestions">
+                <button onclick="quickAsk('Explain line 3')">Explain line 3</button>
+                <button onclick="quickAsk('Simplify this code')">Simplify this</button>
+                <button onclick="quickAsk('Give me a coding challenge')">Challenge me</button>
+                <button onclick="quickAsk('What is an f-string?')">What is f-string?</button>
+                <button onclick="quickAsk('Show a real-world usage of this')">Real-world usage</button>
+            </div>
+            <div id="chatMessages" class="ai-mentor-messages">
+                <div class="ai-msg assistant">
+                    <div class="ai-msg-avatar">🤖</div>
+                    <div class="ai-msg-bubble">Hey! I'm your AI mentor for this module. I can see your code and output — ask me anything!</div>
+                </div>
+            </div>
+            <div class="ai-mentor-input">
+                <input type="text" id="chatInput" placeholder="Ask your mentor anything..." onkeydown="if(event.key==='Enter')sendChat()">
+                <button onclick="sendChat()" class="ai-mentor-send">↑</button>
+            </div>
+            <div class="ai-mentor-footer">AI mentor for course-related questions. Responses may vary.</div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="ide-statusbar">
+            <span>PowerShell 7</span>
+            <span>UTF-8</span>
+            <span id="lineCount">Ln 1</span>
+            <span class="statusbar-right">AI Ready ●</span>
+        </div>
     </div>
 </div>
+
+<!-- Challenge Mode -->
+<div class="challenge-overlay" id="challengeOverlay" style="display:none;" onclick="if(event.target===this)closeChallengeMode()">
+    <div class="challenge-panel">
+        <div class="challenge-panel-header">
+            <h3>🏆 Coding Challenges</h3>
+            <span class="challenge-progress" id="challengeProgress">0/10 completed</span>
+            <button class="challenge-close" onclick="closeChallengeMode()">✕</button>
+        </div>
+        
+        <!-- Challenge List (picker) -->
+        <div class="challenge-list" id="challengeList"></div>
+        
+        <!-- Active Challenge View -->
+        <div class="challenge-active" id="challengeActive" style="display:none;">
+            <button class="challenge-back-btn" onclick="showChallengeList()">← Back to list</button>
+            <div class="challenge-card">
+                <div class="challenge-card-header">
+                    <span class="challenge-number" id="challengeNumber">#1</span>
+                    <span class="challenge-card-title" id="challengeTitle"></span>
+                </div>
+                <div class="challenge-task" id="challengeTask"></div>
+                <div class="challenge-editor-wrapper">
+                    <textarea id="challengeEditor" class="challenge-editor-textarea"></textarea>
+                </div>
+                <div class="challenge-actions">
+                    <button class="challenge-submit" onclick="runAndSubmitChallenge()">▶ Run & Submit</button>
+                    <button class="challenge-hint-btn" onclick="showChallengeHint()">💡 Hint</button>
+                    <button class="challenge-solution-btn" onclick="showChallengeSolution()">👁 Solution</button>
+                </div>
+                <div class="challenge-output" id="challengeOutput" style="display:none;">
+                    <div class="challenge-output-header">Output:</div>
+                    <pre class="challenge-output-text" id="challengeOutputText"></pre>
+                </div>
+                <div class="challenge-feedback" id="challengeFeedback" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Badge unlock popup -->
+<div class="badge-popup" id="badgePopup" style="display:none;">
+    <div class="badge-popup-content">
+        <div class="badge-popup-icon" id="badgePopupIcon"></div>
+        <div class="badge-popup-info">
+            <div class="badge-popup-label">BADGE UNLOCKED!</div>
+            <div class="badge-popup-title" id="badgePopupTitle"></div>
+            <div class="badge-popup-xp" id="badgePopupXp"></div>
+        </div>
+    </div>
+</div>
+
+<!-- XP gain floating text -->
+<div class="xp-float" id="xpFloat" style="display:none;">+10 XP</div>
+
+<!-- Level up banner -->
+<div class="levelup-banner" id="levelupBanner" style="display:none;">
+    <span class="levelup-text" id="levelupText">⬆️ Level Up!</span>
+</div>
+
+<!-- Badge gallery modal -->
+<div class="badge-gallery-overlay" id="badgeGallery" style="display:none;" onclick="if(event.target===this)closeBadges()">
+    <div class="badge-gallery">
+        <div class="badge-gallery-header">
+            <h3>🏅 Achievement Badges</h3>
+            <span class="badge-gallery-stats" id="badgeStats">0/12 Unlocked</span>
+        </div>
+        <div class="badge-grid" id="badgeGrid"></div>
+        <button class="badge-gallery-close" onclick="closeBadges()">Close</button>
+    </div>
+</div>
+
+<!-- Leaderboard modal -->
+<div class="leaderboard-overlay" id="leaderboardOverlay" style="display:none;" onclick="if(event.target===this)closeLeaderboard()">
+    <div class="leaderboard-card">
+        <div class="leaderboard-header">
+            <h3>🏆 Live Leaderboard</h3>
+            <span class="leaderboard-subtitle" id="leaderboardSubtitle">Top 25 learners — updates in real time</span>
+            <button class="leaderboard-close" onclick="closeLeaderboard()">✕</button>
+        </div>
+        <div class="leaderboard-list" id="leaderboardList">
+            <div class="leaderboard-loading">Loading…</div>
+        </div>
+        <div class="leaderboard-footer" id="leaderboardFooter"></div>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/shell/shell.min.js"></script>
+
 <script src="data/courses.js"></script>
 <script src="js/diagrams.js"></script>
+<script type="module" src="js/firebase-init.js"></script>
 <script src="js/app.js"></script>
+
 </body>
 </html>
