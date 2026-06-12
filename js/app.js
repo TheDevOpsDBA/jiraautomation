@@ -1571,7 +1571,18 @@ function formatMarkdown(text) {
 
 // ===== Quick AI Actions =====
 
+function toggleAiMentor() {
+    const section = document.getElementById('aiMentorSection');
+    if (section) {
+        section.classList.toggle('collapsed');
+    }
+}
+
 function quickAsk(question) {
+    const section = document.getElementById('aiMentorSection');
+    if (section && section.classList.contains('collapsed')) {
+        section.classList.remove('collapsed');
+    }
     document.getElementById('chatInput').value = question;
     sendChat();
 }
